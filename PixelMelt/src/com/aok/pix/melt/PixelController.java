@@ -96,6 +96,7 @@ public class PixelController {
 	 * ピクセルを動かす
 	 */
 	public void update() {
+		// System.out.println("****** update ******");
 
 		main.loadPixels();
 
@@ -105,55 +106,29 @@ public class PixelController {
 			}
 		}
 
+		// System.out.println("bookNextLocation Done!");
+
 		int to = -1;
 		for (int i = 0; i < cols; i++) {
 			for (int j = 0; j < rows; j++) {
 				// Global.rMap[to] = fromという対応関係
 				to = i + j * cols;
+
+				// System.out.println("(i,j) = (" + i + "," + j + ")");
+				// System.out.println("isBlank(i, j) = " + isBlank(i, j));
+				// System.out.println("to = " + to);
+				// System.out.println("Global.rMap[to] = " + Global.rMap[to]);
+
 				// 予約マップに予約が無かったり、前と同じ場所を予約してある場合はピクセルを移動させる必要がないので移動処理を行わない
-				if (isBlank(i, j) || Global.rMap[to] == to) {
-					Global.rMap[to] = -1; // 使い終わった予約マップの初期化
-					return;
+				if (!isBlank(i, j) && Global.rMap[to] != to) {
+					// System.ou]t.println("Let's move pixel");
+					main.pixels[to] = Global.rMap[to];
 				}
-				movePixel(Global.rMap[to], to);
-				Global.rMap[to] = -1; // 使い終わった予約マップの初期化
+				Global.rMap[to] = Global.blankColor; // 使い終わった予約マップの初期化
 			}
 		}
 
 		main.updatePixels();
-
-	}
-
-	/**
-	 * ピクセルの色をコピー
-	 * 
-	 * @param x1
-	 *            移動前のピクセルx座標
-	 * @param y1
-	 *            移動前のピクセルy座標
-	 * @param x2
-	 *            移動先のピクセルx座標
-	 * @param y2
-	 *            移動先のピクセルy座標
-	 */
-	private void copyPixel(int from, int to) {
-
-		main.pixels[to] = main.pixels[from];
-	}
-
-	/**
-	 * ピクセルを移動
-	 * 
-	 * @param from
-	 *            移動前のピクセルの配列番号
-	 * @param to
-	 *            移動後のピクセルの配列番号
-	 */
-	private void movePixel(int from, int to) {
-		// ピクセルの値をコピー
-		copyPixel(from, to);
-		// ピクセルの移動前の場所を空ピクセルに
-		setBlank(from);
 	}
 
 	/**
@@ -169,13 +144,17 @@ public class PixelController {
 	 *            移動先のピクセルy座標
 	 */
 	private void reservePixel(int x1, int y1, int x2, int y2) {
+
 		// 方向マップを移動後の状態に更新
 		updateDMap(x1, y1, x2, y2);
 		// 状態マップを移動後の状態に更新
 		updateSMap(x1, y1, x2, y2);
 		int from = x1 + y1 * cols;
 		int to = x2 + y2 * cols;
-		Global.rMap[to] = from;
+		// System.out.println("******** reservePixel *********");
+		// System.out.println("(from, to) = (" + from + "," + to + ")");
+		Global.rMap[to] = main.pixels[from];
+		setBlank(from);
 	}
 
 	/**
@@ -286,6 +265,9 @@ public class PixelController {
 		// 状態マップを更新
 		State st = State.valueOf(stateNum);
 		Global.sMap[x][y] = st;
+		// System.out.println("******** updateState *********");
+		// System.out.println("(x, y) = (" + x + "," + y + ")");
+		// System.out.println("st = " + st);
 
 		// 次の状態を返す
 		return st;
@@ -392,11 +374,18 @@ public class PixelController {
 	 * @return ピクセルを移動出来るならtrue
 	 */
 	private boolean isSafe(int dx, int dy) {
+		// System.out.println("******** isSafe *********");
 		if (isInBounds(dx, dy)) {
+			// System.out.println("isInBounds!");
 			if (isBlank(dx, dy)) {
+				// System.out.println("isBlank!");
+				// System.out.println("(x, y) = (" + dx + "," + dy + ")");
+				// System.out.println("isSafe!");
 				return true;
 			}
+			// System.out.println("isBlank!");
 		}
+		// System.out.println("isOutOfBounds!");
 		return false;
 	}
 
@@ -429,7 +418,7 @@ public class PixelController {
 	 */
 	private boolean isBlank(int dx, int dy) {
 		int loc = dx + dy * cols;
-		if (Global.rMap[loc] == -1) {
+		if (Global.rMap[loc] == Global.blankColor) {
 			return true;
 		}
 		return false;
