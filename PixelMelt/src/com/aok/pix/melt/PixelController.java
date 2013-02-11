@@ -120,7 +120,7 @@ public class PixelController {
 				// System.out.println("Global.rMap[to] = " + Global.rMap[to]);
 
 				// 予約マップに予約が無かったり、前と同じ場所を予約してある場合はピクセルを移動させる必要がないので移動処理を行わない
-				if (!isBlank(i, j) && Global.rMap[to] != to) {
+				if (!isBlank(i, j)) {
 					// System.ou]t.println("Let's move pixel");
 					main.pixels[to] = Global.rMap[to];
 				}
