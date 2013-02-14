@@ -97,7 +97,9 @@ public class PixelController {
 	 */
 	public void update() {
 		// System.out.println("****** update ******");
-
+		Global.moveCount = 0;
+		Global.NoneCount = 0;
+		Global.blankCount = 0;
 		main.loadPixels();
 
 		for (int i = 0; i < cols; i++) {
@@ -121,14 +123,13 @@ public class PixelController {
 
 				// 予約マップに予約が無かったり、前と同じ場所を予約してある場合はピクセルを移動させる必要がないので移動処理を行わない
 				if (!isBlank(i, j)) {
-					// System.ou]t.println("Let's move pixel");
 					main.pixels[to] = Global.rMap[to];
 				}
-				Global.rMap[to] = Global.blankColor; // 使い終わった予約マップの初期化
 			}
 		}
-
+		System.out.println("blankCount = " + Global.blankCount);
 		main.updatePixels();
+
 	}
 
 	/**
@@ -145,10 +146,6 @@ public class PixelController {
 	 */
 	private void reservePixel(int x1, int y1, int x2, int y2) {
 
-		// 方向マップを移動後の状態に更新
-		updateDMap(x1, y1, x2, y2);
-		// 状態マップを移動後の状態に更新
-		updateSMap(x1, y1, x2, y2);
 		int from = x1 + y1 * cols;
 		int to = x2 + y2 * cols;
 		// System.out.println("******** reservePixel *********");
@@ -157,38 +154,10 @@ public class PixelController {
 		setBlank(from);
 	}
 
-	/**
-	 * ピクセルの状態マップをピクセルの状態に合わせて更新
-	 * 
-	 * @param x1
-	 *            移動前のピクセルx座標
-	 * @param y1
-	 *            移動前のピクセルy座標
-	 * @param x2
-	 *            移動後のピクセルx座標
-	 * @param y2
-	 *            移動後のピクセルy座標
-	 */
-	private void updateDMap(int x1, int y1, int x2, int y2) {
-		Global.dMap[x2][y2] = Global.dMap[x1][y1];
-		Global.dMap[x1][y1] = Direction.NONE;
-	}
-
-	/**
-	 * ピクセルの状態マップをピクセルの状態に合わせて更新
-	 * 
-	 * @param x1
-	 *            移動前のピクセルx座標
-	 * @param y1
-	 *            移動前のピクセルy座標
-	 * @param x2
-	 *            移動後のピクセルx座標
-	 * @param y2
-	 *            移動後のピクセルy座標
-	 */
-	private void updateSMap(int x1, int y1, int x2, int y2) {
-		Global.sMap[x2][y2] = Global.sMap[x1][y1];
-		Global.sMap[x1][y1] = State.IDLE;
+	private void reservePixel(int x, int y) {
+		int loc = x + y * cols;
+		Global.rMap[loc] = main.pixels[loc];
+		setBlank(loc);
 	}
 
 	/**
@@ -204,24 +173,30 @@ public class PixelController {
 		int p = main.pixels[loc];
 		if (p == Global.blankColor) {
 			// blank pixel
+			Global.blankCount++;
 			return;
 		} else {
 			State st = updateState(x, y);
 
 			switch (st) {
 			case IDLE:
-				reservePixel(x, y, x, y);
+				Global.sMap[x][y] = st;
+				reservePixel(x, y);
 				break;
 			case UP:
+				Global.sMap[x][y - 1] = st;
 				reservePixel(x, y, x, y - 1);
 				break;
 			case DOWN:
+				Global.sMap[x][y + 1] = st;
 				reservePixel(x, y, x, y + 1);
 				break;
 			case LEFT:
+				Global.sMap[x - 1][y] = st;
 				reservePixel(x, y, x - 1, y);
 				break;
 			case RIGHT:
+				Global.sMap[x + 1][y] = st;
 				reservePixel(x, y, x + 1, y);
 				break;
 			}
@@ -246,7 +221,6 @@ public class PixelController {
 		 * 
 		 * direction++: clockwise move direction--: counterclockwise move
 		 */
-
 		int sign; // 周りにからのピクセルがあるかどうかをチェックする回転方向
 		int loc = x + y * cols; // ピクセルの場所
 
@@ -260,11 +234,13 @@ public class PixelController {
 		// ピクセルの状態を決定
 		int stateNum = 0;
 		Direction d = Global.dMap[x][y];
+		// System.out.println("Direction d =" + d);
 		stateNum = getNewState(d.getIntValue(), sign, x, y, 1);
+		// System.out.println("Global.dMap[x][y] = " + Global.dMap[x][y]);
 
 		// 状態マップを更新
 		State st = State.valueOf(stateNum);
-		Global.sMap[x][y] = st;
+		// System.out.println("State st = " + st);
 		// System.out.println("******** updateState *********");
 		// System.out.println("(x, y) = (" + x + "," + y + ")");
 		// System.out.println("st = " + st);
@@ -295,7 +271,7 @@ public class PixelController {
 			Global.dMap[x][y] = Utils.getRandomDirection();
 			return 0;
 		}
-		count++;
+
 		int nextX = x;
 		int nextY = y;
 		switch (_directionNum) {
@@ -324,11 +300,11 @@ public class PixelController {
 		}
 
 		if (isSafe(nextX, nextY)) {
-			Global.dMap[x][y] = Direction.valueOf(_directionNum);
+			Global.dMap[nextX][nextY] = Direction.valueOf(_directionNum);
 			return _directionNum;
 		} else {
 			return getNewState(newDirectionNum(_directionNum + 1 * _sign),
-					_sign, x, y, count);
+					_sign, x, y, count + 1);
 		}
 
 	}
@@ -341,9 +317,9 @@ public class PixelController {
 	 */
 	private int newDirectionNum(int n) {
 		if (n < 0) {
-			n = 4;
+			n += 4;
 		} else if (n > 4) {
-			n = 1;
+			n -= 4;
 		}
 
 		return n;

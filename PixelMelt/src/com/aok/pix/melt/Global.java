@@ -24,4 +24,8 @@ public class Global {
 	public static final int rows = 367; // 縦の画素数
 
 	public static boolean blankFlag = true;
+	
+	public static int moveCount = 0;
+	public static int NoneCount = 0;
+	public static int blankCount = 0;
 }

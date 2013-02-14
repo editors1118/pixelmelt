@@ -20,7 +20,7 @@ public class Utils {
 	 * ピクセルが空である事を示す色を設定。 別に黒じゃなくても良い。
 	 */
 	private static void initBlankColor() {
-		Global.blankColor = Global.main.color(255, 0, 0);
+		Global.blankColor = Global.main.color(0, 0, 255);
 	}
 
 	/**
@@ -72,6 +72,7 @@ public class Utils {
 			d = Direction.RIGHT;
 			break;
 		}
+//		System.out.println("d = " + d);
 		return d;
 	}
 
