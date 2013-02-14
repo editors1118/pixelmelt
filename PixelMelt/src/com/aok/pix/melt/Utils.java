@@ -35,7 +35,7 @@ public class Utils {
 			for (int j = 0; j < Global.rows; j++) {
 				loc = i + j * Global.cols;
 				// initialize reservation map
-				Global.rMap[loc] = Global.blankColor;
+				Global.rMap[loc] = Global.main.pixels[loc];
 				// initialize state map
 				Global.sMap[i][j] = State.IDLE;
 				// initialize direction map
@@ -72,7 +72,7 @@ public class Utils {
 			d = Direction.RIGHT;
 			break;
 		}
-//		System.out.println("d = " + d);
+		// System.out.println("d = " + d);
 		return d;
 	}
 

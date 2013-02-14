@@ -120,11 +120,7 @@ public class PixelController {
 				// System.out.println("isBlank(i, j) = " + isBlank(i, j));
 				// System.out.println("to = " + to);
 				// System.out.println("Global.rMap[to] = " + Global.rMap[to]);
-
-				// 予約マップに予約が無かったり、前と同じ場所を予約してある場合はピクセルを移動させる必要がないので移動処理を行わない
-				if (!isBlank(i, j)) {
-					main.pixels[to] = Global.rMap[to];
-				}
+				main.pixels[to] = Global.rMap[to];
 			}
 		}
 		System.out.println("blankCount = " + Global.blankCount);
@@ -151,6 +147,7 @@ public class PixelController {
 		// System.out.println("******** reservePixel *********");
 		// System.out.println("(from, to) = (" + from + "," + to + ")");
 		Global.rMap[to] = main.pixels[from];
+		Global.rMap[from] = Global.blankColor;
 		setBlank(from);
 	}
 
