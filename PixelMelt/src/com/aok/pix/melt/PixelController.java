@@ -87,7 +87,11 @@ public class PixelController {
 
 	// 初期化用
 	private void makeBlank(int x, int y) {
-		if (canRemove(main.pixels[x + y * cols])) {
+		// if (canRemove(main.pixels[x + y * cols])) {
+		// main.pixels[x + y * cols] = Global.blankColor;
+		// }
+		float seed = (float) Math.random();
+		if (seed < 0.1f) {
 			main.pixels[x + y * cols] = Global.blankColor;
 		}
 	}
@@ -97,9 +101,8 @@ public class PixelController {
 	 */
 	public void update() {
 		// System.out.println("****** update ******");
-		Global.moveCount = 0;
-		Global.NoneCount = 0;
 		Global.blankCount = 0;
+		Global.NoneCount = 0;
 		main.loadPixels();
 
 		for (int i = 0; i < cols; i++) {
@@ -116,15 +119,12 @@ public class PixelController {
 				// Global.rMap[to] = fromという対応関係
 				to = i + j * cols;
 
-				// System.out.println("(i,j) = (" + i + "," + j + ")");
-				// System.out.println("isBlank(i, j) = " + isBlank(i, j));
-				// System.out.println("to = " + to);
-				// System.out.println("Global.rMap[to] = " + Global.rMap[to]);
 				main.pixels[to] = Global.rMap[to];
 			}
 		}
-		System.out.println("blankCount = " + Global.blankCount);
 		main.updatePixels();
+		System.out.println("Global.NoneCount = " + Global.NoneCount);
+		System.out.println("Global.blankCount =" + Global.blankCount);
 
 	}
 
@@ -263,6 +263,11 @@ public class PixelController {
 	 */
 	private int getNewState(int _directionNum, int _sign, int x, int y,
 			int _count) {
+
+		if (_directionNum == Direction.NONE.getIntValue()) {
+			Global.NoneCount++;
+		}
+
 		int count = _count;
 		if (count > 4) {
 			Global.dMap[x][y] = Utils.getRandomDirection();

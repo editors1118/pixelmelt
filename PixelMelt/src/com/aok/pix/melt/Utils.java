@@ -55,8 +55,8 @@ public class Utils {
 	 */
 
 	public static Direction getRandomDirection() {
-		int xi = PApplet.ceil((float) (Math.random() * 4));
-
+		int xi = (int) customNoise(4);
+		xi = 3;
 		Direction d = Direction.NONE;
 		switch (xi) {
 		case 1:
@@ -77,6 +77,7 @@ public class Utils {
 	}
 
 	public static float customNoise(float range) {
-		return Global.main.noise(range);
+		float result = (float) ((range - 2) * Math.sin(Math.PI * 2) + 2);
+		return result;
 	}
 }
