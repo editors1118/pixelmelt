@@ -47,8 +47,13 @@ public class PixelController {
 	 * ピクセルを動かすために 閾値以下の明るさのピクセルを ピクセルが空である事を示す色に 置き換える。
 	 */
 	private void removePixels() {
+		Global.blankNum = 0;
+		Global.blankStock = new int[Global.blankMax];
 		for (int i = 0; i < cols; i++) {
 			for (int j = 0; j < rows; j++) {
+				if (Global.blankNum >= Global.blankMax) {
+					return;
+				}
 				makeBlank(i, j);
 			}
 		}
@@ -79,21 +84,26 @@ public class PixelController {
 	 *            ピクセルのy座標
 	 */
 	private void setBlank(int loc) {
-		if (!Global.blankFlag) {
-			return;
-		}
+
 		main.pixels[loc] = Global.blankColor;
 	}
 
 	// 初期化用
 	private void makeBlank(int x, int y) {
-		// if (canRemove(main.pixels[x + y * cols])) {
-		// main.pixels[x + y * cols] = Global.blankColor;
-		// }
 		float seed = (float) Math.random();
 		if (seed < 0.1f) {
+			Global.blankStock[Global.blankNum] = main.pixels[x + y * cols];
 			main.pixels[x + y * cols] = Global.blankColor;
+			Global.blankNum++;
 		}
+	}
+
+	private void fixPix(int x, int y) {
+		if (Global.blankFlag) {
+			return;
+		}
+		int loc = x + y * cols;
+
 	}
 
 	/**
@@ -101,9 +111,34 @@ public class PixelController {
 	 */
 	public void update() {
 		// System.out.println("****** update ******");
-		Global.blankCount = 0;
-		Global.NoneCount = 0;
+		int nCount = 0;
+		int pCount = 0;
+		int rCount = 0;
+
 		main.loadPixels();
+
+		/*
+		 * debug log
+		 */
+		for (int i = 0; i < cols; i++) {
+			for (int j = 0; j < rows; j++) {
+				if (Global.dMap[i + j * cols] == Direction.NONE) {
+					nCount++;
+				}
+				if (main.pixels[i + j * cols] == Global.blankColor) {
+					pCount++;
+				}
+				if (Global.rMap[i + j * cols] == Global.NONRESERVED) {
+					rCount++;
+				}
+			}
+		}
+		System.out.println("nCount = " + nCount);
+		System.out.println("pCount = " + pCount);
+		System.out.println("rCount = " + rCount);
+		/*
+		 * 
+		 */
 
 		for (int i = 0; i < cols; i++) {
 			for (int j = 0; j < rows; j++) {
@@ -118,14 +153,27 @@ public class PixelController {
 			for (int j = 0; j < rows; j++) {
 				// Global.rMap[to] = fromという対応関係
 				to = i + j * cols;
-
-				main.pixels[to] = Global.rMap[to];
+				swapData(to);
 			}
 		}
 		main.updatePixels();
-		System.out.println("Global.NoneCount = " + Global.NoneCount);
-		System.out.println("Global.blankCount =" + Global.blankCount);
 
+	}
+
+	private void swapData(int to) {
+		int from = Global.rMap[to];
+		int pixfrom = main.pixels[from];
+		int pixto = main.pixels[to];
+		main.pixels[to] = pixfrom;
+		main.pixels[from] = pixto;
+		Direction dfrom = Global.dMap[from];
+		Direction dto = Global.dMap[to];
+		Global.dMap[to] = dfrom;
+		Global.dMap[from] = dto;
+		State sfrom = Global.sMap[from];
+		State sto = Global.sMap[to];
+		Global.sMap[to] = sfrom;
+		Global.sMap[from] = sto;
 	}
 
 	/**
@@ -146,14 +194,14 @@ public class PixelController {
 		int to = x2 + y2 * cols;
 		// System.out.println("******** reservePixel *********");
 		// System.out.println("(from, to) = (" + from + "," + to + ")");
-		Global.rMap[to] = main.pixels[from];
-		Global.rMap[from] = Global.blankColor;
+		Global.rMap[to] = from;
+		Global.rMap[from] = Global.NONRESERVED;
 		setBlank(from);
 	}
 
 	private void reservePixel(int x, int y) {
 		int loc = x + y * cols;
-		Global.rMap[loc] = main.pixels[loc];
+		Global.rMap[loc] = loc;
 		setBlank(loc);
 	}
 
@@ -170,30 +218,26 @@ public class PixelController {
 		int p = main.pixels[loc];
 		if (p == Global.blankColor) {
 			// blank pixel
-			Global.blankCount++;
+			fixPix(x, y);
 			return;
 		} else {
 			State st = updateState(x, y);
+			Global.sMap[loc] = st;
 
 			switch (st) {
 			case IDLE:
-				Global.sMap[x][y] = st;
 				reservePixel(x, y);
 				break;
 			case UP:
-				Global.sMap[x][y - 1] = st;
 				reservePixel(x, y, x, y - 1);
 				break;
 			case DOWN:
-				Global.sMap[x][y + 1] = st;
 				reservePixel(x, y, x, y + 1);
 				break;
 			case LEFT:
-				Global.sMap[x - 1][y] = st;
 				reservePixel(x, y, x - 1, y);
 				break;
 			case RIGHT:
-				Global.sMap[x + 1][y] = st;
 				reservePixel(x, y, x + 1, y);
 				break;
 			}
@@ -230,9 +274,10 @@ public class PixelController {
 
 		// ピクセルの状態を決定
 		int stateNum = 0;
-		Direction d = Global.dMap[x][y];
+		Direction d = Global.dMap[loc];
 		// System.out.println("Direction d =" + d);
 		stateNum = getNewState(d.getIntValue(), sign, x, y, 1);
+
 		// System.out.println("Global.dMap[x][y] = " + Global.dMap[x][y]);
 
 		// 状態マップを更新
@@ -264,16 +309,11 @@ public class PixelController {
 	private int getNewState(int _directionNum, int _sign, int x, int y,
 			int _count) {
 
-		if (_directionNum == Direction.NONE.getIntValue()) {
-			Global.NoneCount++;
-		}
-
 		int count = _count;
 		if (count > 4) {
-			Global.dMap[x][y] = Utils.getRandomDirection();
+			Global.dMap[x + y * cols] = Utils.getRandomDirection();
 			return 0;
 		}
-
 		int nextX = x;
 		int nextY = y;
 		switch (_directionNum) {
@@ -302,7 +342,7 @@ public class PixelController {
 		}
 
 		if (isSafe(nextX, nextY)) {
-			Global.dMap[nextX][nextY] = Direction.valueOf(_directionNum);
+			Global.dMap[x + y * cols] = Direction.valueOf(_directionNum);
 			return _directionNum;
 		} else {
 			return getNewState(newDirectionNum(_directionNum + 1 * _sign),
@@ -335,7 +375,7 @@ public class PixelController {
 	 * @return 回転方向が時計回りならtrue
 	 */
 	private boolean isClockwise(int p) {
-		if (main.saturation(p) < 200) {
+		if (main.saturation(p) < 100) {
 			return true;
 		} else {
 			return false;
@@ -396,7 +436,7 @@ public class PixelController {
 	 */
 	private boolean isBlank(int dx, int dy) {
 		int loc = dx + dy * cols;
-		if (Global.rMap[loc] == Global.blankColor) {
+		if (Global.rMap[loc] == Global.NONRESERVED) {
 			return true;
 		}
 		return false;

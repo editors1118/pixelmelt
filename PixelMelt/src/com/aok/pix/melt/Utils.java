@@ -1,7 +1,5 @@
 package com.aok.pix.melt;
 
-import processing.core.PApplet;
-
 public class Utils {
 	/**
 	 * staticなmethod達
@@ -20,29 +18,29 @@ public class Utils {
 	 * ピクセルが空である事を示す色を設定。 別に黒じゃなくても良い。
 	 */
 	private static void initBlankColor() {
-		Global.blankColor = Global.main.color(0, 0, 255);
+		Global.blankColor = Global.main.color(0, 255, 0);
 	}
 
 	/**
 	 * ２つのマップに適当な値を入れる
 	 */
 	public static void initMaps() {
-		Global.dMap = new Direction[Global.cols][Global.rows];
-		Global.sMap = new State[Global.cols][Global.rows];
+		Global.dMap = new Direction[Global.cols * Global.rows];
+		Global.sMap = new State[Global.cols * Global.rows];
 		Global.rMap = new int[Global.cols * Global.rows];
 		int loc;
 		for (int i = 0; i < Global.cols; i++) {
 			for (int j = 0; j < Global.rows; j++) {
 				loc = i + j * Global.cols;
 				// initialize reservation map
-				Global.rMap[loc] = Global.main.pixels[loc];
+				Global.rMap[loc] = loc;
 				// initialize state map
-				Global.sMap[i][j] = State.IDLE;
+				Global.sMap[loc] = State.IDLE;
 				// initialize direction map
 				if (Global.main.pixels[loc] == Global.blankColor) {
-					Global.dMap[i][j] = Direction.NONE;
+					Global.dMap[loc] = Direction.NONE;
 				} else {
-					Global.dMap[i][j] = getRandomDirection();
+					Global.dMap[loc] = getRandomDirection();
 				}
 			}
 		}
@@ -77,7 +75,7 @@ public class Utils {
 	}
 
 	public static float customNoise(float range) {
-		float result = (float) ((range - 2) * Math.sin(Math.PI * 2) + 2);
+		float result = (float) (range * Math.sin(Math.PI * 2));
 		return result;
 	}
 }

@@ -42,7 +42,7 @@ public class MainProgram extends PApplet {
 			save("pixel_melt_result.png");
 			break;
 		case 's':
-			Global.blankFlag = !Global.blankFlag;
+			Global.blankFlag = false;
 			break;
 		}
 	}
